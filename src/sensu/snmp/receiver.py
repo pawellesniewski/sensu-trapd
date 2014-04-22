@@ -82,10 +82,11 @@ class TrapReceiver(object):
         #log.info("TrapReceiver: Initialized SNMP TCP Transport on %s:%s" % (listen_address, listen_port))
         pass
 
-    def _configure_snmp_v2(self, community):
+    def _configure_snmp_v2(self, communities):
         # v1/2 setup
-        pysnmp.entity.config.addV1System(self._snmp_engine, 'sensu-trapd-agent', community)
-        log.debug("TrapReceiver: Initialized SNMPv1 Auth")
+        for community in communities:
+            pysnmp.entity.config.addV1System(self._snmp_engine, "sensu-trapd-agent-%s" % community, community)
+            log.debug("TrapReceiver: Initialized SNMPv1 Auth with community '%s'" % community)
 
     def _configure_snmp_v3(self, users):
         # configure snmp v3 users

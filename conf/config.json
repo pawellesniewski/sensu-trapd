@@ -36,7 +36,7 @@
         "auth": {
             "version2": {
                 "enabled":      true,
-                "community":    "public"
+                "community":    ["public", "private"]
             },
             "version3": {
                 "enabled":      true,
