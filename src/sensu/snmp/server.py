@@ -1,5 +1,7 @@
 import time
 import simplejson as json
+from os import listdir
+from os.path import isfile, join
 
 from sensu.snmp.log import log as LOG
 from sensu.snmp.mib import MibResolver
@@ -24,27 +26,32 @@ class SensuTrapServer(object):
         self._trap_event_dispatcher_thread = TrapEventDispatcherThread(self._config)
 
         # Configure Trap Handlers
-        self._trap_handlers = self._parse_trap_handlers(self._config['daemon']['trap_file'])
+        self._trap_handlers = self._parse_trap_handlers(self._config['daemon']['trap_path'])
 
         LOG.debug("SensuTrapServer: Initialized")
 
     def _configure_mibs(self):
         self._mibs = MibResolver(self._config['mibs']['paths'], self._config['mibs']['mibs'])
 
-    def _parse_trap_handlers(self, trap_file):
-        # TODO: Support multiple trap files
-        LOG.debug("SensuTrapServer: Parsing trap handler file: %s" % (trap_file))
+    def _parse_trap_handlers(self, trap_path):
+        LOG.debug("SensuTrapServer: Parsing trap handler files in '%s' directory" % trap_path)
+
         trap_handlers = dict()
-        try:
-            fh = open(trap_file, 'r')
-            trap_file_data = json.load(fh)
-            for trap_handler_id, trap_handler_config in trap_file_data.items():
-                # Load TrapHandler
-                trap_handler = self._load_trap_handler(trap_handler_id, trap_handler_config)
-                trap_handlers[trap_handler_id] = trap_handler
-                LOG.debug("SensuTrapServer: Parsed trap handler: %s" % (trap_handler_id))
-        finally:
-            fh.close()
+        files = [ f for f in listdir(trap_path) if isfile(join(trap_path,f)) ]
+
+        for trap_file in files:
+            try:
+                LOG.debug("SensuTrapServer: Parsing trap handler file: %s" % (trap_file))
+                fh = open(join(trap_path, trap_file), 'r')
+                trap_file_data = json.load(fh)
+                for trap_handler_id, trap_handler_config in trap_file_data.items():
+                    # Load TrapHandler
+                    trap_handler = self._load_trap_handler(trap_handler_id, trap_handler_config)
+                    trap_handlers[trap_handler_id] = trap_handler
+                    LOG.debug("SensuTrapServer: Parsed trap handler: %s" % (trap_handler_id))
+            finally:
+                fh.close()
+
         return trap_handlers
 
     def _load_trap_handler(self, trap_handler_id, trap_handler_config):

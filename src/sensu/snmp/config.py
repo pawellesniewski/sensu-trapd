@@ -8,7 +8,7 @@ DEFAULT_CONFIG = {
             "pid_file":     "sensu-trapd.pid",
             "user":         "nobody",
             "group":        "nogroup",
-            "trap_file":    "conf/traps.json"
+            "trap_path":    "/etc/sensu-trapd/traps"
         },
         "dispatcher": {
             "host":             "127.0.0.1",
